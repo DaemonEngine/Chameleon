@@ -15,8 +15,8 @@ Chameleon is a standalone GUI-based texture replacement editor written in Python
 Dependencies
 ------------
 
-Python >= 3.3
-PyQt4
+* Python >= 3.3
+* PyQt4
 
 Installation
 ------------
