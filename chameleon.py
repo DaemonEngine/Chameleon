@@ -962,7 +962,7 @@ class Shaders():
 		for path in self.shader_sources:
 			if os.path.isdir(path):
 				self.__getShaderDataFromDir(path)
-			else:
+			elif os.path.isfile(path):
 				self.__getShaderDataFromPk3(path)
 		
 			progress += 1
