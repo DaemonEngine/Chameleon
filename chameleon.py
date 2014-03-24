@@ -34,7 +34,7 @@ class Static():
 	PREVIEW_WIDTH = 128
 	PREVIEW_HEIGHT = 128
 	
-	TEXTURE_EXTENSIONS = ("tga", "png", "jpg", "jpeg", "webp") # no "."
+	TEXTURE_EXTENSIONS = ("tga", "png", "jpg", "jpeg", "webp", "crn") # no "."
 	
 	MAP_FILE_EXTENSION = ".map"
 	RULE_FILE_EXTENSION = ".rules"
@@ -44,8 +44,8 @@ class Static():
 		DEFAULT_HOMEPATH = os.path.expandvars("%APPDATA%\\Roaming\\Daemon")
 		SETTINGS_DIR = os.path.expandvars("%APPDATA%\\" + TITLE)
 	else: # assume posix
-		DEFAULT_BASEPATH = "/opt/unvanquished"
-		DEFAULT_HOMEPATH = os.path.expanduser("~/.Unvanquished")
+		DEFAULT_BASEPATH = "/usr/share/unvanquished"
+		DEFAULT_HOMEPATH = os.path.expanduser("~/.unvanquished")
 		SETTINGS_DIR = os.path.expanduser("~/." + TITLE.lower())
 	
 	if not os.path.isdir(SETTINGS_DIR):
