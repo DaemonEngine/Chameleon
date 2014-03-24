@@ -19,6 +19,8 @@
 
 
 from PyQt4 import QtGui, QtCore
+from PIL   import Image
+from io    import BytesIO
 
 import sys
 import os
@@ -953,7 +955,26 @@ class Shaders():
 							self.shader_sources.append(mod_path + os.sep + node)
 							
 		pd.setMaximum(len(self.shader_sources))
-						
+
+	def __PIL2QPixmap(self, pilImage):
+		(r,g,b,a) = pilImage.convert("RGBA").split()
+		rawImage  = Image.merge("RGBA", (b,g,r,a)).tobytes("raw", "RGBA")
+		qImage    = QtGui.QImage(rawImage, pilImage.size[0], pilImage.size[1], QtGui.QImage.Format_ARGB32)
+		qPixmap   = QtGui.QPixmap.fromImage(qImage)
+		return qPixmap
+
+	def __createPixmap(self, target):
+		if ( type(target) == bytes ):
+			target = BytesIO(target)
+
+		try:
+			pilImage = Image.open(target)
+		except OSError:
+			# this usually means unsupported image format
+			return QtGui.QPixmap()
+
+		return self.__PIL2QPixmap(pilImage)
+
 	def __updateShaderData(self, pd):
 		"Writes database of shaders inside self.shader_sources into self.shaders."
 		self.shaders.clear()
@@ -1001,8 +1022,9 @@ class Shaders():
 			and pk3_path.rsplit(".", 1)[-1].lower() in Static.TEXTURE_EXTENSIONS:
 				name = pk3_path[9:].rsplit(".", 1)[0]
 				
-				preview = QtGui.QPixmap()
-				preview.loadFromData(pk3.read(pk3_path))
+				#preview = QtGui.QPixmap()
+				#preview.loadFromData(pk3.read(pk3_path))
+				preview = self.__createPixmap(pk3.read(pk3_path))
 				
 				width = preview.width()
 				height = preview.height()
@@ -1086,8 +1108,9 @@ class Shaders():
 			name = os.path.basename(directory) + "/" + node.rsplit(".", 1)[0]
 			path = directory + os.sep + node
 			
-			preview = QtGui.QPixmap()
-			preview.load(path)
+			#preview = QtGui.QPixmap()
+			#preview.load(path)
+			preview = self.__createPixmap(path)
 			
 			width = preview.width()
 			height = preview.height()

@@ -17,6 +17,7 @@ Dependencies
 
 * Python >= 3.3
 * PyQt4
+* Pillow
 
 Installation
 ------------
