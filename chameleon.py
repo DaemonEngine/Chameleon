@@ -880,6 +880,9 @@ class Shaders():
 				return self.shaders[shader]["height"]
 		else:
 			return 0
+
+	def sizeKnown(self, shader):
+		return self.getWidth(shader) > 0 and self.getHeight(shader) > 0
 		
 	def getResolution(self, shader):
 		return str(self.getWidth(shader)) + " x " + str(self.getHeight(shader))
@@ -1314,7 +1317,8 @@ class Map():
 				           +  math.sin(rule_rot_rad)**2 * old_hscale) \
 				           *  rule_vscale
 
-				if old in self.model.shaders and new in self.model.shaders:
+				if old in self.model.shaders and new in self.model.shaders \
+				and self.model.shaders.sizeKnown(old) and self.model.shaders.sizeKnown(new):
 					old_hshift_ratio = old_hshift / self.model.shaders.getWidth(old)
 					old_vshift_ratio = old_vshift / self.model.shaders.getHeight(old)
 					
