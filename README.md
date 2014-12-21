@@ -19,6 +19,10 @@ Dependencies
 * PyQt4
 * Pillow
 
+On Debian-like Linux distros you may use the following command to install dependencies:
+
+  sudo apt-get install python3 python3-pyqt4 python3-pil 
+
 Installation
 ------------
 
