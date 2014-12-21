@@ -19,10 +19,23 @@ Dependencies
 * PyQt4
 * Pillow
 
+OS         | Dependency names
+-----------|-----------------
+Arch Linux | python python-pyqt4 python-pillow
+Debian     | python3 python3-pyqt4 python3-pil
+
 Installation
 ------------
 
-Just run chameleon.py with Python.
+#### Manual installation
+
+After installing the dependencies, just run chameleon.py with Python.
+
+#### Packages
+
+OS         | Package
+-----------|-----------------
+Arch Linux | [q3chameleon-git](https://aur.archlinux.org/packages/q3chameleon-git/)
 
 Usage
 -----
