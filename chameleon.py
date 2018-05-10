@@ -933,7 +933,7 @@ class Shaders():
 		return shaders
 		
 	def __updateShaderSources(self, pd):
-		"""Writes pathes of mod directories and their pk3 files/dirs inside self.basepath
+		"""Writes pathes of mod directories and their pak files/dirs inside self.basepath
 		and self.homepath into self.shader_sources."""
 		self.shader_sources.clear()
 		
@@ -954,8 +954,9 @@ class Shaders():
 					self.shader_sources.append(mod_path)
 					
 					for node in os.listdir(mod_path):
-						if node.endswith(".pk3") or node.endswith(".pk3dir"):
-							self.shader_sources.append(mod_path + os.sep + node)
+						for pak_type in ["pk3", "dpk"]:
+							if node.endswith(os.extsep + pak_type) or node.endswith(os.extsep + pak_type + "dir"):
+								self.shader_sources.append(mod_path + os.sep + node)
 							
 		pd.setMaximum(len(self.shader_sources))
 
