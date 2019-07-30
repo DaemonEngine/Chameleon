@@ -24,6 +24,7 @@ from io    import BytesIO
 
 import sys
 import os
+import shutil
 import pickle
 import copy
 import zipfile
@@ -47,9 +48,27 @@ class Static():
 		SETTINGS_DIR = os.path.expandvars("%APPDATA%\\" + TITLE)
 	else: # assume posix
 		DEFAULT_BASEPATH = "/usr/share/unvanquished"
-		DEFAULT_HOMEPATH = os.path.expanduser("~/.unvanquished")
-		SETTINGS_DIR = os.path.expanduser("~/." + TITLE.lower())
+
+		# in PyQt5 we may use QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.AppDataLocation)[0]
+		xdgdatahome = os.getenv("XDG_DATA_HOME")
+		if not xdgdatahome:
+			xdgdatahome = os.path.join(os.getenv("HOME"), ".local", "share")
+
+		DEFAULT_HOMEPATH = os.path.join(xdgdatahome, "unvanquished")
+
+		# in PyQt5 we may use QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.ConfigLocation)[0]
+		xdgconfighome = os.getenv("XDG_CONFIG_HOME")
+		if not xdgconfighome:
+			xdgconfighome = os.path.join(os.getenv("HOME"), ".config")
+
+		SETTINGS_DIR = os.path.join(xdgconfighome, TITLE.lower())
 	
+		OLD_SETTINGS_DIR = os.path.expanduser("~/." + TITLE.lower())
+
+		if os.path.isdir(OLD_SETTINGS_DIR) and not os.path.isdir(SETTINGS_DIR):
+			os.makedirs(os.path.dirname(SETTINGS_DIR), exist_ok=True)
+			shutil.move(OLD_SETTINGS_DIR, SETTINGS_DIR)
+
 	if not os.path.isdir(SETTINGS_DIR):
 		os.mkdir(SETTINGS_DIR) # exceptions uncatched on purpose
 	
