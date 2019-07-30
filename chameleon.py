@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PIL   import Image
 from io    import BytesIO
 
@@ -58,7 +58,7 @@ class Static():
 	
 	@staticmethod
 	def progressDialog():
-		pd = QtGui.QProgressDialog("Loading available shaders ...", None, 0, 1)
+		pd = QtWidgets.QProgressDialog("Loading available shaders ...", None, 0, 1)
 		pd.show()
 		return pd
 	
@@ -281,9 +281,9 @@ class ShaderTableModel(QtCore.QAbstractTableModel):
 		return None
 
 
-class ShaderSourcesWizzard(QtGui.QWizard):
+class ShaderSourcesWizzard(QtWidgets.QWizard):
 	def __init__(self, model):
-		QtGui.QWizard.__init__(self)
+		QtWidgets.QWizard.__init__(self)
 		
 		self.model = model
 		
@@ -300,8 +300,8 @@ class ShaderSourcesWizzard(QtGui.QWizard):
 		else:
 			homepath = old_homepath
 		
-		self.basepathField = QtGui.QLineEdit(basepath)
-		self.homepathField = QtGui.QLineEdit(homepath)
+		self.basepathField = QtWidgets.QLineEdit(basepath)
+		self.homepathField = QtWidgets.QLineEdit(homepath)
 		
 		self.setWindowTitle("Chameleon - Settings")
 		self.addPage(self.ShaderSourcesWizzardPage1(self))
@@ -313,14 +313,14 @@ class ShaderSourcesWizzard(QtGui.QWizard):
 
 	# TODO: add wizzard pages for 1) select mods 2) select sources
 	
-	class ShaderSourcesWizzardPage1(QtGui.QWizardPage):
+	class ShaderSourcesWizzardPage1(QtWidgets.QWizardPage):
 		def __init__(self, parent):
-			QtGui.QWizardPage.__init__(self, parent)
+			QtWidgets.QWizardPage.__init__(self, parent)
 			
 			self.parent = parent
 			
-			layout = QtGui.QFormLayout()
-			layout.addWidget(QtGui.QLabel("Game settings"))
+			layout = QtWidgets.QFormLayout()
+			layout.addWidget(QtWidgets.QLabel("Game settings"))
 			layout.addRow("Basepath", parent.basepathField)
 			layout.addRow("Homepath", parent.homepathField)
 			self.setLayout(layout)
@@ -355,9 +355,9 @@ class ShaderPickerListModel(QtCore.QAbstractListModel):
 			return shader.split("/", 1)[-1]
 
 
-class ShaderPicker(QtGui.QDialog):
+class ShaderPicker(QtWidgets.QDialog):
 	def __init__(self, view, model, old_shader):
-		QtGui.QDialog.__init__(self)
+		QtWidgets.QDialog.__init__(self)
 		self.view = view
 		self.model = model
 		self.old_shader = old_shader
@@ -378,35 +378,35 @@ class ShaderPicker(QtGui.QDialog):
 		self.setWindowTitle("Pick a replacement for " + self.old_shader)
 		
 		# create widgets
-		self.old_data_label = QtGui.QLabel(self.old_shader + "\n" + self.model.shaders.getResolution(self.old_shader), self)
+		self.old_data_label = QtWidgets.QLabel(self.old_shader + "\n" + self.model.shaders.getResolution(self.old_shader), self)
 		self.old_data_label.setAlignment(QtCore.Qt.AlignRight)
 		self.old_data_label.setMinimumWidth(256)
 		self.old_data_label.setMaximumWidth(256)
 		
-		self.old_preview_label = QtGui.QLabel(self)
+		self.old_preview_label = QtWidgets.QLabel(self)
 		self.old_preview_label.setMinimumSize(Static.PREVIEW_WIDTH, Static.PREVIEW_HEIGHT)
 		self.old_preview_label.setAlignment(QtCore.Qt.AlignRight)
 		self.old_preview_label.setPixmap(self.model.shaders.getPreview(old_shader))
 		
-		self.new_preview_label = QtGui.QLabel(self)
+		self.new_preview_label = QtWidgets.QLabel(self)
 		self.new_preview_label.setMinimumSize(Static.PREVIEW_WIDTH, Static.PREVIEW_HEIGHT)
 		self.new_preview_label.setAlignment(QtCore.Qt.AlignLeft)
 		self.new_preview_label.setPixmap(self.model.shaders.getPreview(self.new_shader))
 		
 		if self.new_shader != None:
-			self.new_data_label = QtGui.QLabel(self.new_shader + "\n" + self.model.shaders.getResolution(self.new_shader), self)
+			self.new_data_label = QtWidgets.QLabel(self.new_shader + "\n" + self.model.shaders.getResolution(self.new_shader), self)
 		else:
-			self.new_data_label = QtGui.QLabel(self)
+			self.new_data_label = QtWidgets.QLabel(self)
 		self.new_data_label.setAlignment(QtCore.Qt.AlignLeft)
 		self.new_data_label.setMinimumWidth(256)
 		self.new_data_label.setMaximumWidth(256)
 		
-		self.set_list = QtGui.QListWidget(self)
+		self.set_list = QtWidgets.QListWidget(self)
 		self.set_list.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 		self.set_list.setMinimumWidth(180)
 		self.set_list.setMaximumWidth(180)
 		for setname in self.model.shaders.getSets():
-			item = QtGui.QListWidgetItem(setname)
+			item = QtWidgets.QListWidgetItem(setname)
 			self.set_list.addItem(item)
 			self.setname2item[setname] = item
 		
@@ -418,22 +418,22 @@ class ShaderPicker(QtGui.QDialog):
 		self.clear_button = QtGui.QPushButton("Clear", self)
 		
 		# assemble layout
-		toplayout = QtGui.QHBoxLayout()
+		toplayout = QtWidgets.QHBoxLayout()
 		toplayout.addWidget(self.old_data_label)
 		toplayout.addWidget(self.old_preview_label)
 		toplayout.addWidget(self.new_preview_label)
 		toplayout.addWidget(self.new_data_label)
 		
-		centerlayout = QtGui.QHBoxLayout()
+		centerlayout = QtWidgets.QHBoxLayout()
 		centerlayout.addWidget(self.set_list)
 		centerlayout.addWidget(self.shader_list)
 		
-		bottomlayout = QtGui.QHBoxLayout()
+		bottomlayout = QtWidgets.QHBoxLayout()
 		bottomlayout.addWidget(self.replace_button)
 		bottomlayout.addWidget(self.cancel_button)
 		bottomlayout.addWidget(self.clear_button)
 		
-		rootlayout = QtGui.QVBoxLayout()
+		rootlayout = QtWidgets.QVBoxLayout()
 		rootlayout.addLayout(toplayout)
 		rootlayout.addLayout(centerlayout)
 		rootlayout.addLayout(bottomlayout)
@@ -441,11 +441,11 @@ class ShaderPicker(QtGui.QDialog):
 		self.setLayout(rootlayout)
 		
 		# connect signals
-		QtCore.QObject.connect(self.set_list, QtCore.SIGNAL("itemSelectionChanged()"), self.__handleSelectedSets)
-		QtCore.QObject.connect(self.shader_list, QtCore.SIGNAL("clicked(QModelIndex)"), self.__handleClickedShader)
-		QtCore.QObject.connect(self.replace_button, QtCore.SIGNAL("clicked()"), self.__handleReplace)
-		QtCore.QObject.connect(self.cancel_button, QtCore.SIGNAL("clicked()"), self.__handleCancel)
-		QtCore.QObject.connect(self.clear_button, QtCore.SIGNAL("clicked()"), self.__handleClear)
+		self.set_list.itemSelectionChanged.connect(self.__handleSelectedSets)
+		self.shader_list.clicked.connect(self.__handleClickedShader)
+		self.replace_button.clicked.connect(self.__handleReplace)
+		self.cancel_button.clicked.connect(self.__handleCancel)
+		self.clear_button.clicked.connect(self.__handleClear)
 		
 		# restore selected sets
 		lastsets = self.view.session.getLastShaderSets()
@@ -523,62 +523,63 @@ class ShaderPicker(QtGui.QDialog):
 	def close(self):
 		self.view.session.setShaderPickerGeometry(self.saveGeometry())
 		
-		QtGui.QDialog.close(self)
+		QtWidgets.QDialog.close(self)
 
 
-class View(QtGui.QMainWindow):
+class View(QtWidgets.QMainWindow):
 	def __init__(self, model):
-		QtGui.QWidget.__init__(self)
+		QtWidgets.QWidget.__init__(self)
 		self.model = model
 		self.session = Session(model)
-		
+		self.trigger = QtCore.pyqtSignal()
+
 		# configure window
 		self.setWindowTitle(Static.TITLE)
 		
 		# create widgets
-		self.menuMap = QtGui.QMenu("Map", self)
+		self.menuMap = QtWidgets.QMenu("Map", self)
 		self.actionOpenMap = self.menuMap.addAction("Open map", self.__handleOpenMap, "Ctrl+O")
 		self.actionSaveMap = self.menuMap.addAction("Save map", self.__handleSaveMap, "Ctrl+S")
 		self.actionSaveMap.setEnabled(False)
 				
-		self.menuRules = QtGui.QMenu("Rules", self)
+		self.menuRules = QtWidgets.QMenu("Rules", self)
 		self.actionOpenRules = self.menuRules.addAction("Import rules", self.__handleOpenRules, "Ctrl+I")
 		self.actionSaveRules = self.menuRules.addAction("Export rules", self.__handleSaveRules, "Ctrl+E")
 		self.actionSaveRules.setEnabled(False)
 		self.actionClearRules = self.menuRules.addAction("Clear rules", self.__handleClearRules)
 		self.actionClearRules.setEnabled(False)
 		
-		self.menuShaders = QtGui.QMenu("Shaders", self)
+		self.menuShaders = QtWidgets.QMenu("Shaders", self)
 		self.actionReloadShaders = self.menuShaders.addAction("Reload shaders", self.__handleReloadShaders, "Ctrl+R")
 		self.actionSettings = self.menuShaders.addAction("Set shader sources", self.__handleSettings)
 		
-		self.statusLabel = QtGui.QLabel("", self)
+		self.statusLabel = QtWidgets.QLabel("", self)
 		
-		self.tableView = QtGui.QTableView()
+		self.tableView = QtWidgets.QTableView()
 		self.tableModel = ShaderTableModel(self.model)
 		self.tableView.setModel(self.tableModel)
 		
 		# assemble layout
-		menubar = QtGui.QMenuBar()
+		menubar = QtWidgets.QMenuBar()
 		menubar.addMenu(self.menuMap)
 		menubar.addMenu(self.menuRules)
 		menubar.addMenu(self.menuShaders)
 		
-		bottomlayout = QtGui.QHBoxLayout()
+		bottomlayout = QtWidgets.QHBoxLayout()
 		bottomlayout.addWidget(self.statusLabel)
 		
-		rootlayout = QtGui.QVBoxLayout()
+		rootlayout = QtWidgets.QVBoxLayout()
 		rootlayout.addWidget(self.tableView)
 		rootlayout.addLayout(bottomlayout)
 		
-		centerWidget = QtGui.QWidget()
+		centerWidget = QtWidgets.QWidget()
 		centerWidget.setLayout(rootlayout)
 		
 		self.setMenuBar(menubar)
 		self.setCentralWidget(centerWidget)
 		
 		# connect signals
-		QtCore.QObject.connect(self.tableView, QtCore.SIGNAL("clicked(QModelIndex)"), self.__handleTableClicked)
+		self.tableView.clicked.connect(self.__handleTableClicked)
 		
 	def setStatus(self, status):
 		"Called by Model.* to display stuff in the status bar."
@@ -609,7 +610,7 @@ class View(QtGui.QMainWindow):
 		except BaseException as e:
 			print("Failed to save session file " + Static.SESSION_FILE + ": " + str(e), file = sys.stderr)
 		
-		QtGui.QWidget.closeEvent(self, event)
+		QtWidgets.QWidget.closeEvent(self, event)
 		
 	def keyPressEvent(self, event):
 		if event.modifiers() & QtCore.Qt.ControlModifier:
@@ -663,7 +664,7 @@ class View(QtGui.QMainWindow):
 			self.__updateRulesButton()			
 			
 	def __handleOpenMap(self):
-		path = QtGui.QFileDialog.getOpenFileName(
+		path, _filter = QtWidgets.QFileDialog.getOpenFileName(
 			self,
 			"Choose a map",
 			self.session.getLastMapDir(),
@@ -679,7 +680,7 @@ class View(QtGui.QMainWindow):
 			self.__updateTable()
 		
 	def __handleSaveMap(self):
-		path = QtGui.QFileDialog.getSaveFileName(
+		path = QtWidgets.QFileDialog.getSaveFileName(
 			self, "Choose a destination",
 			self.session.getLastMapDir(),
 			"*" + Static.MAP_FILE_EXTENSION
@@ -690,7 +691,7 @@ class View(QtGui.QMainWindow):
 			self.model.saveMap(path)
 	
 	def __handleOpenRules(self):
-		path = QtGui.QFileDialog.getOpenFileName(
+		path = QtWidgets.QFileDialog.getOpenFileName(
 			self,
 			"Choose a rules file",
 			self.session.getLastRulesDir(),
@@ -711,7 +712,7 @@ class View(QtGui.QMainWindow):
 		self.setStatus("Rules cleared.")
 	
 	def __handleSaveRules(self):
-		path = QtGui.QFileDialog.getSaveFileName(
+		path = QtWidgets.QFileDialog.getSaveFileName(
 			self,
 			"Choose a destination",
 			self.session.getLastRulesDir(),
@@ -1633,7 +1634,7 @@ class Model():
 	
 
 if __name__ == "__main__":
-	app = QtGui.QApplication(sys.argv)
+	app = QtWidgets.QApplication(sys.argv)
 
 	model = Model()
 	view = View(model)
