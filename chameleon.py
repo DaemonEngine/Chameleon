@@ -22,16 +22,19 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PIL   import Image
 from io    import BytesIO
 
-import sys
+import copy
+import math
 import os
 import pickle
-import copy
+import platform
+import shutil
+import sys
 import zipfile
-import math
 
 
 class Static():
-	TITLE = "Chameleon"
+	APP_TITLE = "Chameleon"
+	GAME_TITLE = "Unvanquished"
 	
 	PREVIEW_WIDTH = 128
 	PREVIEW_HEIGHT = 128
@@ -41,20 +44,66 @@ class Static():
 	MAP_FILE_EXTENSION = ".map"
 	RULE_FILE_EXTENSION = ".rules"
 	
-	if os.name == "nt":
-		DEFAULT_BASEPATH = os.path.expandvars("%PROGRAMFILES%\\Unvanquished")
-		DEFAULT_HOMEPATH = os.path.expandvars("%APPDATA%\\Roaming\\Daemon")
-		SETTINGS_DIR = os.path.expandvars("%APPDATA%\\" + TITLE)
-	else: # assume posix
-		DEFAULT_BASEPATH = "/usr/share/unvanquished"
-		DEFAULT_HOMEPATH = os.path.expanduser("~/.unvanquished")
-		SETTINGS_DIR = os.path.expanduser("~/." + TITLE.lower())
+	QtCore.QCoreApplication.setApplicationName("Chameleon")
+	standardConfigParentDir = os.path.dirname(QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.AppConfigLocation)[0])
+	standardApplicationParentDir = os.path.dirname(QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.ApplicationsLocation)[0])
+	standardDataParentDir = os.path.dirname(QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.AppDataLocation)[0])
+	standardCacheParentDir = os.path.dirname(QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.CacheLocation)[0])
+
+	old_settings_dir = None
+
+	if platform.system() == "Windows":
+		old_settings_dir = os.path.join(os.path.expandvars("%APPDATA%", APP_TITLE))
+		# "My Games" is not a Microsoft standard but a de facto standard,
+		# there is no environement variable and the name is not expected to be localized.
+		DEFAULT_HOMEPATH = os.path.join(os.path.expandvars("%CSIDL_MYDOCUMENTS%"), "My Games", GAME_TITLE)
+		DEFAULT_BASEPATH = os.path.join(os.path.expandvars("%PROGRAMFILES%"), GAME_TITLE)
+		# Qt is broken and uses a disposable place (Local App Data) to save configuration,
+		# The data folder is correct anyway.
+		SETTINGS_DIR = os.path.join(standardDataParentDir, APP_TITLE)
+		# There is no distinction between configuration and data on Windows anyway.
+		DATA_DIR = SETTINGS_DIR
+		CACHE_DIR = os.path.join(standardCacheParentDir, APP_TITLE)
+	elif platform.system() == "Darwin":
+		DEFAULT_HOMEPATH = os.path.join(standardDataParentDir, GAME_TITLE)
+		DEFAULT_BASEPATH = os.path.join(standardApplicationParentDir, GAME_TITLE + ".app", "Contents", "MacOS")
+		SETTINGS_DIR = os.path.join(standardConfigParentDir, APP_TITLE)
+		DATA_DIR = os.path.join(standardDataParentDir, APP_TITLE)
+		CACHE_DIR = os.path.join(standardCacheParentDir, APP_TITLE)
+	else: # Assume Linux or other Posix system.
+		old_settings_dir = os.path.join(os.path.expandvars("${HOME}"), "." + APP_TITLE.lower())
+		DEFAULT_HOMEPATH = os.path.join(standardDataParentDir, GAME_TITLE.lower())
+		DEFAULT_BASEPATH = os.path.join(DEFAULT_HOMEPATH, "base")
+		SETTINGS_DIR = os.path.join(standardConfigParentDir, APP_TITLE.lower())
+		DATA_DIR = os.path.join(standardDataParentDir, APP_TITLE.lower())
+		CACHE_DIR = os.path.join(standardCacheParentDir, APP_TITLE.lower())
+
+	os.makedirs(os.path.dirname(SETTINGS_DIR), exist_ok=True)
+	os.makedirs(os.path.dirname(CACHE_DIR), exist_ok=True)
+
+	if old_settings_dir:
+		# What if it fails?
+		if os.path.isdir(old_settings_dir) and not os.path.exists(SETTINGS_DIR):
+			for file_name in [ "shader_cache.dat" ]:
+				old_file_path = os.path.join(old_settings_dir, file_name)
+				new_file_path = os.path.join(CACHE_DIR, file_name)
+				if os.path.exists(old_file_path) and not os.path.exists(new_file_path):
+					os.makedirs(CACHE_DIR, exist_ok=True)
+					shutil.move(old_file_path, new_file_path)
+			for file_name in [ "session.dat" ]:
+				old_file_path = os.path.join(old_settings_dir, file_name)
+				new_file_path = os.path.join(DATA_DIR, file_name)
+				if os.path.exists(old_file_path) and not os.path.exists(new_file_path):
+					os.makedirs(DATA_DIR, exist_ok=True)
+					shutil.move(old_file_path, new_file_path)
+			shutil.move(old_settings_dir, SETTINGS_DIR)
 	
-	if not os.path.isdir(SETTINGS_DIR):
-		os.mkdir(SETTINGS_DIR) # exceptions uncatched on purpose
-	
-	SHADER_CACHE_FILE = SETTINGS_DIR + os.sep + "shader_cache.dat"
-	SESSION_FILE = SETTINGS_DIR + os.sep + "session.dat"
+	# Exceptions uncatched on purpose.
+	os.makedirs(SETTINGS_DIR, exist_ok=True)
+	os.makedirs(CACHE_DIR, exist_ok=True)
+
+	SHADER_CACHE_FILE = os.path.join(CACHE_DIR, "shader_cache.dat")
+	SESSION_FILE = os.path.join(DATA_DIR, "session.dat")
 	
 	@staticmethod
 	def progressDialog():
@@ -402,7 +451,7 @@ class ShaderPicker(QtWidgets.QDialog):
 		self.new_data_label.setMaximumWidth(256)
 		
 		self.set_list = QtWidgets.QListWidget(self)
-		self.set_list.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+		self.set_list.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 		self.set_list.setMinimumWidth(180)
 		self.set_list.setMaximumWidth(180)
 		for setname in self.model.shaders.getSets():
@@ -410,12 +459,12 @@ class ShaderPicker(QtWidgets.QDialog):
 			self.set_list.addItem(item)
 			self.setname2item[setname] = item
 		
-		self.shader_list = QtGui.QListView(self)
-		self.shader_list.setViewMode(QtGui.QListView.IconMode)
+		self.shader_list = QtWidgets.QListView(self)
+		self.shader_list.setViewMode(QtWidgets.QListView.IconMode)
 				
-		self.replace_button = QtGui.QPushButton("Replace", self)
-		self.cancel_button = QtGui.QPushButton("Cancel", self)
-		self.clear_button = QtGui.QPushButton("Clear", self)
+		self.replace_button = QtWidgets.QPushButton("Replace", self)
+		self.cancel_button = QtWidgets.QPushButton("Cancel", self)
+		self.clear_button = QtWidgets.QPushButton("Clear", self)
 		
 		# assemble layout
 		toplayout = QtWidgets.QHBoxLayout()
@@ -450,14 +499,14 @@ class ShaderPicker(QtWidgets.QDialog):
 		# restore selected sets
 		lastsets = self.view.session.getLastShaderSets()
 		if lastsets != None:
-			selection = QtGui.QItemSelection()
+			selection = QtCore.QItemSelection()
 			
 			for setname in lastsets:
 				if setname in self.setname2item:
 					index = self.set_list.indexFromItem(self.setname2item[setname])
 					selection.select(index, index)
 					
-			self.set_list.selectionModel().select(selection, QtGui.QItemSelectionModel.Select)
+			self.set_list.selectionModel().select(selection, QtCore.QItemSelectionModel.Select)
 			
 		# restore geometry
 		geom = self.view.session.getShaderPickerGeometry()
@@ -534,7 +583,7 @@ class View(QtWidgets.QMainWindow):
 		self.trigger = QtCore.pyqtSignal()
 
 		# configure window
-		self.setWindowTitle(Static.TITLE)
+		self.setWindowTitle(Static.APP_TITLE)
 		
 		# create widgets
 		self.menuMap = QtWidgets.QMenu("Map", self)
@@ -675,12 +724,12 @@ class View(QtWidgets.QMainWindow):
 			
 			self.session.setLastMap(path)
 			
-			self.setWindowTitle(Static.TITLE + " - " + os.path.basename(path))
+			self.setWindowTitle(Static.APP_TITLE + " - " + os.path.basename(path))
 			self.actionSaveMap.setEnabled(True)
 			self.__updateTable()
 		
 	def __handleSaveMap(self):
-		path = QtWidgets.QFileDialog.getSaveFileName(
+		path, _filter = QtWidgets.QFileDialog.getSaveFileName(
 			self, "Choose a destination",
 			self.session.getLastMapDir(),
 			"*" + Static.MAP_FILE_EXTENSION
@@ -691,7 +740,7 @@ class View(QtWidgets.QMainWindow):
 			self.model.saveMap(path)
 	
 	def __handleOpenRules(self):
-		path = QtWidgets.QFileDialog.getOpenFileName(
+		path, _filter = QtWidgets.QFileDialog.getOpenFileName(
 			self,
 			"Choose a rules file",
 			self.session.getLastRulesDir(),
@@ -712,7 +761,7 @@ class View(QtWidgets.QMainWindow):
 		self.setStatus("Rules cleared.")
 	
 	def __handleSaveRules(self):
-		path = QtWidgets.QFileDialog.getSaveFileName(
+		path, _filter = QtWidgets.QFileDialog.getSaveFileName(
 			self,
 			"Choose a destination",
 			self.session.getLastRulesDir(),
@@ -1457,7 +1506,7 @@ class Rules():
 			self.__setRule(old, new, hscale, vscale, rot)
 	
 	def writeFile(self, path):
-		out = "# This is a rules file for " + Static.TITLE + ".\n" \
+		out = "# This is a rules file for " + Static.APP_TITLE + ".\n" \
 		    + "# <old shader> <new shader> <horizontal scale> <vertical scale> <rotation>\n"
 		
 		for (old, (new, hscale, vscale, rot)) in self.rules.items():
