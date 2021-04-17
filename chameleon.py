@@ -241,9 +241,9 @@ class ShaderTableModel(QtCore.QAbstractTableModel):
 	
 	def flags(self, index):
 		if index.column() in (7, 8, 9):
-			return QtCore.Qt.ItemFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
+			return QtCore.Qt.ItemFlags(int(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable))
 		else:
-			return QtCore.Qt.ItemFlags(QtCore.Qt.ItemIsEnabled)
+			return QtCore.Qt.ItemFlags(int(QtCore.Qt.ItemIsEnabled))
 		
 	def setData(self, index, value, role = QtCore.Qt.EditRole):
 		if role != QtCore.Qt.EditRole:
