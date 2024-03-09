@@ -829,36 +829,13 @@ class Shaders():
 
 	def writeCache(self, path):
 		with open(path, "wb") as f:
-			shaders_copy = copy.deepcopy(self.shaders)
-
-			# convert QPixmap to QByteArray
-			for shader in self.shaders.keys():
-				if not self.shaders[shader]["is_shader"]:
-					preview = self.shaders[shader]["preview"]
-					preview_bytes = QtCore.QByteArray()
-					preview_buffer = QtCore.QBuffer(preview_bytes)
-					preview_buffer.open(QtCore.QIODevice.WriteOnly)
-					preview.save(preview_buffer, "JPG", 100)
-					preview_buffer.close()
-					shaders_copy[shader]["preview"] = preview_bytes
-
-			state = (self.basepath, self.homepath, self.shader_sources, shaders_copy)
-
+			state = (self.basepath, self.homepath, self.shader_sources, self.shaders)
 			pickle.dump(state, f)
 
 	def readCache(self, path):
 		with open(path, "rb") as f:
 			state = pickle.load(f)
-
 			(self.basepath, self.homepath, self.shader_sources, self.shaders) = state
-
-			# convert QByteArray back to QPixmap
-			for shader in self.shaders.keys():
-				if not self.shaders[shader]["is_shader"]:
-					preview_bytes = self.shaders[shader]["preview"]
-					preview = QtGui.QPixmap()
-					preview.loadFromData(preview_bytes)
-					self.shaders[shader]["preview"] = preview
 
 	def getPath(self, shader):
 		if shader in self.shaders and not self.shaders[shader]["is_shader"]:
@@ -901,9 +878,11 @@ class Shaders():
 						vscale /= scale
 						trans_scale = QtGui.QTransform().scale(hscale, vscale)
 						trans_rot = QtGui.QTransform().rotate(rot)
-						return self.shaders[shader]["preview"].transformed(trans_scale).transformed(trans_rot)
+						preview = self.convertQByteArrayToQPixmap(self.shaders[shader]["preview"])
+						return preview.transformed(trans_scale).transformed(trans_rot)
 					else:
-						return self.shaders[shader]["preview"]
+						preview = self.convertQByteArrayToQPixmap(self.shaders[shader]["preview"])
+						return preview
 		else:
 			return self.pixmap_not_found
 
@@ -1217,12 +1196,26 @@ class Shaders():
 
 			self.__addTexture(name, path, preview, width, height)
 
+	# It's not possible to run copy.deepcopy and pickle.dump on a QPixmap
+	def convertQPixmapToQByteArray(self, qpixmap):
+		qbytearray = QtCore.QByteArray()
+		qbuffer = QtCore.QBuffer(qbytearray)
+		qbuffer.open(QtCore.QIODevice.WriteOnly)
+		qpixmap.save(qbuffer, "JPG", 100)
+		qbuffer.close()
+		return qbytearray
+
+	def convertQByteArrayToQPixmap(self, qbytearray):
+		qpixmap = QtGui.QPixmap()
+		qpixmap.loadFromData(qbytearray)
+		return qpixmap
+
 	def __addTexture(self, name, path, preview, width, height):
 		"Adds a single loose texture to the database."
 		self.shaders[name] = dict()
 		self.shaders[name]["is_shader"] = False
 		self.shaders[name]["path"] = path
-		self.shaders[name]["preview"] = preview
+		self.shaders[name]["preview"] = self.convertQPixmapToQByteArray(preview)
 		self.shaders[name]["preview_source"] = None
 		if preview.width() > 0 and width > 0:
 			self.shaders[name]["preview_scale"] = preview.width() / width
