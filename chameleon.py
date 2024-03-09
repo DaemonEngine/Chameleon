@@ -82,6 +82,8 @@ class Static():
 		DATA_DIR = os.path.join(standardDataParentDir, APP_TITLE.lower())
 		CACHE_DIR = os.path.join(standardCacheParentDir, APP_TITLE.lower())
 
+	DEFAULT_PAKDIR = "pkg"
+
 	os.makedirs(os.path.dirname(SETTINGS_DIR), exist_ok=True)
 	os.makedirs(os.path.dirname(CACHE_DIR), exist_ok=True)
 
@@ -342,6 +344,7 @@ class ShaderSourcesWizzard(QtWidgets.QWizard):
 
 		old_basepath = self.model.shaders.getBasepath()
 		old_homepath = self.model.shaders.getHomepath()
+		old_pakdir = self.model.shaders.getPakdir()
 
 		if old_basepath == None:
 			basepath = Static.DEFAULT_BASEPATH
@@ -353,14 +356,20 @@ class ShaderSourcesWizzard(QtWidgets.QWizard):
 		else:
 			homepath = old_homepath
 
+		if old_pakdir == None:
+			pakdir = Static.DEFAULT_PAKDIR
+		else:
+			pakdir = old_pakdir
+
 		self.basepathField = QtWidgets.QLineEdit(basepath)
 		self.homepathField = QtWidgets.QLineEdit(homepath)
+		self.pakdirField = QtWidgets.QLineEdit(pakdir)
 
 		self.setWindowTitle("Chameleon - Settings")
 		self.addPage(self.ShaderSourcesWizzardPage1(self))
 
 	def accept(self):
-		self.model.loadShaders(Static.progressDialog(), self.basepathField.text(), self.homepathField.text())
+		self.model.loadShaders(Static.progressDialog(), self.basepathField.text(), self.homepathField.text(), self.pakdirField.text())
 
 		self.close()
 
@@ -376,6 +385,7 @@ class ShaderSourcesWizzard(QtWidgets.QWizard):
 			layout.addWidget(QtWidgets.QLabel("Game settings"))
 			layout.addRow("Basepath", parent.basepathField)
 			layout.addRow("Homepath", parent.homepathField)
+			layout.addRow("Pakdir", parent.pakdirField)
 			self.setLayout(layout)
 
 		def validatePage(self):
@@ -383,7 +393,9 @@ class ShaderSourcesWizzard(QtWidgets.QWizard):
 
 			basepath = os.path.expandvars(self.parent.basepathField.text())
 			homepath = os.path.expandvars(self.parent.homepathField.text())
+			pakdir = os.path.expandvars(self.parent.pakdirField.text())
 
+			# pakdir can be empty
 			if os.path.isdir(basepath) and os.path.isdir(homepath):
 				return True
 			else:
@@ -789,6 +801,7 @@ class Shaders():
 	def __init__(self):
 		self.basepath = None
 		self.homepath = None
+		self.pakdir = None
 		self.shader_sources = list() # dirs/pk3s inside self.basepath/self.homepath
 		self.shaders = dict() # shader name -> property -> value
 
@@ -920,7 +933,7 @@ class Shaders():
 	def getResolution(self, shader):
 		return str(self.getWidth(shader)) + " x " + str(self.getHeight(shader))
 
-	def loadShaders(self, pd, basepath, homepath, reload = False):
+	def loadShaders(self, pd, basepath, homepath, pakdir, reload = False):
 		"Updates self.basepath and self.homepath and loads shader data from disk if the pathes have changed."
 		if self.basepath != basepath or self.homepath != homepath or reload:
 			necessary = True
@@ -929,6 +942,7 @@ class Shaders():
 
 		self.basepath = basepath
 		self.homepath = homepath
+		self.pakdir = pakdir
 
 		if necessary:
 			self.__updateShaderSources(pd)
@@ -938,13 +952,16 @@ class Shaders():
 
 	def reloadShaders(self, pd):
 		"Reloads shader data from disk."
-		self.loadShaders(pd, self.basepath, self.homepath, True)
+		self.loadShaders(pd, self.basepath, self.homepath, self.pakdir, True)
 
 	def getBasepath(self):
 		return self.basepath
 
 	def getHomepath(self):
 		return self.homepath
+
+	def getPakdir(self):
+		return self.pakdir
 
 	# TODO: cache getSets answer?
 	def getSets(self):
@@ -979,8 +996,9 @@ class Shaders():
 
 				mods = list()
 				for node in os.listdir(path):
-					if os.path.isdir(path + os.sep + node):
-						mods.append(node)
+					if self.pakdir in ["", node]:
+						if os.path.isdir(path + os.sep + node):
+							mods.append(node)
 
 				for mod in mods:
 					mod_path = path + os.sep + mod
@@ -1699,9 +1717,9 @@ class Model():
 		except BaseException as e:
 			print("Failed to write cache file " + Static.SHADER_CACHE_FILE + ": " + str(e), file = sys.stderr)
 
-	def loadShaders(self, pd, basepath, homepath):
+	def loadShaders(self, pd, basepath, homepath, pakdir):
 		"Loads shaders inside given pathes."
-		changed = self.shaders.loadShaders(pd, basepath, homepath)
+		changed = self.shaders.loadShaders(pd, basepath, homepath, pakdir)
 
 		if changed:
 			self.writeCache()
