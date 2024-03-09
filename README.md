@@ -18,6 +18,7 @@ Dependencies
 * Python >= 3.3
 * PyQt4
 * Pillow
+* [Crunch](https://github.com/DaemonEngine/crunch)
 
 OS         | Dependency names
 -----------|-----------------

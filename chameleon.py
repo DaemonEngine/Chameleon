@@ -28,7 +28,9 @@ import os
 import pickle
 import platform
 import shutil
+import subprocess
 import sys
+import tempfile
 import zipfile
 
 
@@ -39,7 +41,9 @@ class Static():
 	PREVIEW_WIDTH = 128
 	PREVIEW_HEIGHT = 128
 	
-	TEXTURE_EXTENSIONS = ("tga", "png", "jpg", "jpeg", "webp", "crn") # no "."
+	# no dot
+	TEXTURE_CRUNCH_EXTENSION = ("crn", "dds", "ktx")
+	TEXTURE_EXTENSIONS = ("tga", "png", "jpg", "jpeg", "webp") + TEXTURE_CRUNCH_EXTENSION
 	
 	MAP_FILE_EXTENSION = ".map"
 	RULE_FILE_EXTENSION = ".rules"
@@ -1017,9 +1021,43 @@ class Shaders():
 		qPixmap   = QtGui.QPixmap.fromImage(qImage)
 		return qPixmap
 
+	def __crunchToTgaBytes(self, ext, path, content):
+		if content:
+			crunchFileHandle, crunchFilePath = tempfile.mkstemp(suffix = "." + ext)
+			os.write(crunchFileHandle, content)
+			os.close(crunchFileHandle)
+		else:
+			crunchFilePath = path
+
+		try:
+			tgaFileHandle, tgaFilePath = tempfile.mkstemp(suffix = ".tga")
+			os.close(tgaFileHandle)
+
+			cmdList = [ "crunch", "-quiet", "-file", crunchFilePath, "-out", tgaFilePath ]
+			subprocess.call(cmdList, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+			tgaFileObject = open(tgaFilePath, "rb")
+			tgaFileContent = tgaFileObject.read()
+			tgaFileObject.close()
+			os.remove(tgaFilePath)
+		except:
+			print("Failed to run crunch executable", file = sys.stderr)
+			tgaFileContent = None
+
+		if content:
+			os.remove(crunchFilePath)
+
+		return tgaFileContent
+
 	def __createPixmap(self, path, content):
 		try:
-			if content:
+			for ext in Static.TEXTURE_CRUNCH_EXTENSION:
+				if path.lower().endswith("." + ext):
+					content = self.__crunchToTgaBytes(ext, path, content)
+					break
+
+			# if content is b'' it's an empty file
+			if content != None:
 				pilImage = Image.open(BytesIO(content))
 			else:
 				pilImage = Image.open(path)
