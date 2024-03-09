@@ -1017,17 +1017,18 @@ class Shaders():
 		qPixmap   = QtGui.QPixmap.fromImage(qImage)
 		return qPixmap
 
-	def __createPixmap(self, target):
-		if ( type(target) == bytes ):
-			target = BytesIO(target)
-
+	def __createPixmap(self, path, content):
 		try:
-			pilImage = Image.open(target)
+			if content:
+				pilImage = Image.open(BytesIO(content))
+			else:
+				pilImage = Image.open(path)
+
+			return self.__PIL2QPixmap(pilImage)
 		except OSError:
 			# this usually means unsupported image format
+			print("Failed to load image " + path, file = sys.stderr)
 			return QtGui.QPixmap()
-
-		return self.__PIL2QPixmap(pilImage)
 
 	def __updateShaderData(self, pd):
 		"Writes database of shaders inside self.shader_sources into self.shaders."
@@ -1078,7 +1079,7 @@ class Shaders():
 				
 				#preview = QtGui.QPixmap()
 				#preview.loadFromData(pk3.read(pk3_path))
-				preview = self.__createPixmap(pk3.read(pk3_path))
+				preview = self.__createPixmap(combined_path, pk3.read(pk3_path))
 				
 				width = preview.width()
 				height = preview.height()
@@ -1164,7 +1165,7 @@ class Shaders():
 			
 			#preview = QtGui.QPixmap()
 			#preview.load(path)
-			preview = self.__createPixmap(path)
+			preview = self.__createPixmap(path, None)
 			
 			width = preview.width()
 			height = preview.height()
