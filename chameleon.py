@@ -1050,6 +1050,8 @@ class Shaders():
 		return tgaFileContent
 
 	def __createPixmap(self, path, content):
+		print("Loading image file " + path)
+
 		try:
 			for ext in Static.TEXTURE_CRUNCH_EXTENSION:
 				if path.lower().endswith("." + ext):
@@ -1131,6 +1133,8 @@ class Shaders():
 				self.__parseShaderFileContent(combined_path, pk3.read(pk3_path))
 	
 	def __parseShaderFileContent(self, path, content):
+		print("Parsing shader file " + path)
+
 		if type(content) == bytes:
 			try:
 				content = content.decode("ascii")
