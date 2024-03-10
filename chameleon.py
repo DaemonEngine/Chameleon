@@ -2,7 +2,7 @@
 # Needs Python >= 3.3, PyQt4
 
 
-# Copyright 2013 Unvanquished Development
+# Copyright 2013-2024 Unvanquished Development
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

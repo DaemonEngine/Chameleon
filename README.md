@@ -1,10 +1,9 @@
-Chameleon
-=========
+# Chameleon
 
 Texture replacement editor for the Quake 3 map format
 
-Features
---------
+
+## Features
 
 Chameleon is a standalone GUI-based texture replacement editor written in Python and PyQt. Its main task is replacing a number of textures inside a .map file while applying scale factors and rotation to all affected surfaces. It allows you to:
 
@@ -12,42 +11,35 @@ Chameleon is a standalone GUI-based texture replacement editor written in Python
 * Choose the target shader/texture from a cached database 
 * Create and export replacement rulesets for later use 
 
-Dependencies
-------------
+
+## Dependencies
 
 * Python >= 3.3
-* PyQt4
+* PyQt5
 * Pillow
-* [Crunch](https://github.com/DaemonEngine/crunch)
+* [Crunch](https://github.com/DaemonEngine/crunch) (optional, for reading CRN, DDS, or KTX textures)
 
-OS         | Dependency names
------------|-----------------
-Arch Linux | python python-pyqt4 python-pillow
-Debian     | python3 python3-pyqt4 python3-pil
+OS| Dependency names
+-|-
+Arch Linux|python python-pyqt5 python-pillow
+Debian/Ubuntu|python3 python3-pyqt5 python3-pil
 
-Installation
-------------
 
-#### Manual installation
+## Installation
 
-After installing the dependencies, just run chameleon.py with Python.
+After installing the dependencies, just run `chameleon.py` with Python.
 
-#### Packages
 
-OS         | Package
------------|-----------------
-Arch Linux | [q3chameleon-git](https://aur.archlinux.org/packages/q3chameleon-git/)
-
-Usage
------
+## Usage
 
 Always make a backup of your map!
-It is recommended that you export the updated map under another name instead of overwriting the old map.
 
-License
--------
+It is recommended that you export the updated map under another name instead of overwriting the old map. Or store your maps in version control systems like [Git](https://git-scm.com), it's better!
 
-> Copyright 2013 Unvanquished Development
+
+## License
+
+> Copyright 2013-2024 Unvanquished Development
 >
 > This program is free software: you can redistribute it and/or modify
 > it under the terms of the GNU General Public License as published by
